@@ -22,16 +22,18 @@ This project implements ITU-R recommendation-based models to quantify how interf
 
 ## Project Structure
 
+The workflow is: **Project_Equations.tex** → **rfi/equations_itu.py** → **rfi/scenario.py** → **notebooks/RFI_Band_Analysis.ipynb**.
+
 ```
 rfi-model/
+├── Project_Equations.tex   # Source equations (LaTeX)
 ├── rfi/
-│   ├── scenario.py      # Main scenario engine and configurations
-│   ├── itu_models.py    # Core ITU equation implementations
-│   └── equations_itu.py # Alternative/legacy equations
+│   ├── equations_itu.py    # ITU equation implementations (from .tex)
+│   └── scenario.py        # Scenario engine and band/interference configs
 ├── notebooks/
-│   └── Untitled.ipynb   # Analysis and visualization notebook
-├── data/                # Input data files
-└── requirements.txt     # Python dependencies
+│   └── RFI_Band_Analysis.ipynb   # Analysis and plots
+├── requirements.txt
+└── README.md
 ```
 
 ## Installation

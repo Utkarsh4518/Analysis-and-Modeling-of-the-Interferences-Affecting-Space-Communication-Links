@@ -1,0 +1,268 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{\textbf{Equations, Variables, and Functional Role\\
+of the RFI Model}}
+\author{Utkarsh Maurya}
+\date{}
+
+\begin{document}
+\maketitle
+
+
+%------------------------------------------------
+\section{Propagation and Link Budget}
+
+\subsection{Free-Space Path Loss (ITU-R P.525)}
+\begin{equation}
+L_{\mathrm{fs}}(f,d) =
+32.45 + 20\log_{10}(f_{\mathrm{MHz}})
++ 20\log_{10}(d_{\mathrm{km}})
+\end{equation}
+
+\begin{itemize}
+\item \textbf{Used for:} Modeling geometric spreading loss between a transmitter
+and a receiver for both desired and interfering signals.
+\item \textbf{Provides:} Frequency- and distance-dependent attenuation used to
+convert transmitter EIRP into received power.
+\item \textbf{Variables:}
+\begin{itemize}
+    \item $L_{\mathrm{fs}}$: free-space path loss [dB]
+    \item $f_{\mathrm{MHz}}$: carrier frequency [MHz]
+    \item $d_{\mathrm{km}}$: propagation distance [km]
+\end{itemize}
+\end{itemize}
+
+\subsection{Received Carrier Power}
+\begin{equation}
+C = EIRP_{\mathrm{tx}}(f)
++ G_{\mathrm{rx}}(f,\theta_0)
+- L_{\mathrm{path}}(f,d_0)
+- L_{\mathrm{other}}
+\end{equation}
+
+\begin{itemize}
+\item \textbf{Used for:} Establishing the interference-free reference level of the
+victim communication link.
+\item \textbf{Provides:} Received carrier power used as the baseline for all
+interference and SNR degradation metrics.
+\item \textbf{Variables:}
+\begin{itemize}
+    \item $C$: received carrier power [dBW]
+    \item $EIRP_{\mathrm{tx}}$: transmit equivalent isotropically radiated power [dBW]
+    \item $G_{\mathrm{rx}}$: receive antenna gain toward the desired signal [dB]
+    \item $L_{\mathrm{path}}$: propagation losses (free-space and fixed atmospheric) [dB]
+    \item $L_{\mathrm{other}}$: fixed additional losses (polarization, implementation) [dB]
+\end{itemize}
+\end{itemize}
+
+%------------------------------------------------
+\section{Antenna Pattern Model}
+
+\subsection{Receive Antenna Off-Axis Gain (ITU-R S.1528-type)}
+
+Main-lobe region:
+\begin{equation}
+G_{\mathrm{rx}}(\theta) =
+G_{\max}
+- 12\left(\frac{\theta}{\theta_{3\mathrm{dB}}}\right)^2
+\end{equation}
+
+Side-lobe region:
+\begin{equation}
+G_{\mathrm{rx}}(\theta) =
+G_{\max} - 30\ \mathrm{dB}
+\end{equation}
+
+\begin{itemize}
+\item \textbf{Used for:} Modeling angular discrimination of the receive antenna for
+off-axis interfering signals.
+\item \textbf{Provides:} Receive antenna gain as a function of arrival angle.
+\item \textbf{Variables:}
+\begin{itemize}
+    \item $G_{\mathrm{rx}}(\theta)$: receive antenna gain at off-axis angle $\theta$ [dB]
+    \item $G_{\max}$: maximum (boresight) antenna gain [dB]
+    \item $\theta$: off-axis angle relative to antenna boresight [deg]
+    \item $\theta_{3\mathrm{dB}}$: 3-dB beamwidth of the antenna [deg]
+\end{itemize}
+\end{itemize}
+
+%------------------------------------------------
+\section{Interference Modeling}
+
+\subsection{Single-Entry Interference Power}
+\begin{equation}
+I_i =
+EIRP_i(f)
+- L_{\mathrm{fs}}(f,d_i)
+- L_{\mathrm{atm}}(f,d_i,W_i)
++ G_{\mathrm{rx}}(f,\theta_i)
+- L_{\mathrm{misc}}
+\end{equation}
+
+\begin{itemize}
+\item \textbf{Used for:} Computing the received interference contribution from a
+single interfering transmitter.
+\item \textbf{Provides:} Interference power at the victim receiver from interferer $i$.
+\item \textbf{Variables:}
+\begin{itemize}
+    \item $I_i$: interference power from source $i$ [dBW]
+    \item $EIRP_i$: equivalent isotropically radiated power of interferer $i$ toward the victim [dBW]
+    \item $d_i$: distance between interferer $i$ and victim receiver [km]
+    \item $\theta_i$: off-axis angle of interferer $i$ at the victim antenna [deg]
+    \item $L_{\mathrm{atm}}$: atmospheric or weather-dependent attenuation [dB]
+    \item $L_{\mathrm{misc}}$: fixed miscellaneous losses [dB]
+\end{itemize}
+\end{itemize}
+
+\subsection{Aggregate Interference Power}
+\begin{equation}
+I_{\mathrm{agg}} =
+10\log_{10}
+\left(
+\sum_i 10^{I_i/10}
+\right)
+\end{equation}
+
+\begin{itemize}
+\item \textbf{Used for:} Combining multiple simultaneous interference sources into
+a single equivalent interference level.
+\item \textbf{Provides:} Total aggregate interference power consistent with ITU-R
+aggregate-interference methodology.
+\item \textbf{Variables:}
+\begin{itemize}
+    \item $I_{\mathrm{agg}}$: aggregate interference power [dBW]
+    \item $I_i$: individual interference powers [dBW]
+\end{itemize}
+\end{itemize}
+
+\subsection{Carrier-to-Interference Ratio}
+\begin{equation}
+\frac{C}{I} = C - I_{\mathrm{agg}}
+\end{equation}
+
+\begin{itemize}
+\item \textbf{Used for:} Assessing the dominance of the desired signal over aggregate interference.
+\item \textbf{Provides:} Carrier-to-interference ratio used for robustness comparison.
+\item \textbf{Variables:}
+\begin{itemize}
+    \item $C/I$: carrier-to-interference ratio [dB]
+\end{itemize}
+\end{itemize}
+
+%------------------------------------------------
+\section{Noise and Signal-to-Noise Ratio}
+
+\subsection{Thermal Noise Power}
+\begin{equation}
+N =
+10\log_{10}
+\left(
+k_{\mathrm{B}} T_{\mathrm{sys}} B
+\right)
+\end{equation}
+
+\begin{itemize}
+\item \textbf{Used for:} Modeling the intrinsic noise floor of the receiver.
+\item \textbf{Provides:} Thermal noise power at the receiver input.
+\item \textbf{Variables:}
+\begin{itemize}
+    \item $N$: thermal noise power [dBW]
+    \item $k_{\mathrm{B}}$: Boltzmann constant [J/K]
+    \item $T_{\mathrm{sys}}$: system noise temperature [K]
+    \item $B$: receiver bandwidth [Hz]
+\end{itemize}
+\end{itemize}
+
+\subsection{Interference-Free Signal-to-Noise Ratio}
+\begin{equation}
+\mathrm{SNR}_0 = C - N
+\end{equation}
+
+\begin{itemize}
+\item \textbf{Used for:} Defining the baseline link margin without interference.
+\item \textbf{Provides:} Reference SNR for evaluating interference-induced degradation.
+\item \textbf{Variables:}
+\begin{itemize}
+    \item $\mathrm{SNR}_0$: interference-free signal-to-noise ratio [dB]
+\end{itemize}
+\end{itemize}
+
+\subsection{Signal-to-Noise Ratio with Interference}
+\begin{equation}
+\mathrm{SNR}_{\mathrm{I}} =
+10 \log_{10}
+\left(
+\frac{10^{C/10}}
+{10^{N/10} + 10^{I_{\mathrm{agg}}/10}}
+\right)
+\end{equation}
+
+\begin{itemize}
+\item \textbf{Used for:} Evaluating link performance in the presence of interference.
+\item \textbf{Provides:} Operational signal-to-noise ratio under interference conditions.
+\item \textbf{Variables:}
+\begin{itemize}
+    \item $\mathrm{SNR}_{\mathrm{I}}$: signal-to-noise ratio with interference [dB]
+\end{itemize}
+\end{itemize}
+
+%------------------------------------------------
+\section{RFI-Induced Attenuation}
+
+\subsection{SNR Loss Due to Interference}
+\begin{equation}
+\Delta \mathrm{SNR} =
+\mathrm{SNR}_0 - \mathrm{SNR}_{\mathrm{I}}
+\end{equation}
+
+\begin{itemize}
+\item \textbf{Used for:} Isolating degradation caused solely by RFI.
+\item \textbf{Provides:} SNR loss used for probabilistic ITU-R compliance evaluation.
+\item \textbf{Variables:}
+\begin{itemize}
+    \item $\Delta \mathrm{SNR}$: RFI-induced attenuation [dB]
+\end{itemize}
+\end{itemize}
+
+%------------------------------------------------
+\section{Equivalent Power Flux Density}
+
+\subsection{Equivalent Power Flux Density (EPFD)}
+\begin{equation}
+\mathrm{EPFD} =
+EIRP_i
+- L_{\mathrm{fs}}(f,d_{\mathrm{km}})
++ G_{\mathrm{rx}}
+- 10\log_{10}(B_{\mathrm{MHz}})
+\end{equation}
+
+
+
+\begin{itemize}
+\item \textbf{Used for:} Expressing interference in a receiver-independent metric
+for regulatory and satellite compatibility analysis.
+\item \textbf{Provides:} Equivalent power flux density per unit bandwidth, directly
+comparable to ITU-R EPFD protection limits.
+\item \textbf{Variables:}
+\begin{itemize}
+    \item $\mathrm{EPFD}$: equivalent power flux density [dBW/m$^2$/MHz]
+    \item $EIRP_i$: equivalent isotropically radiated power of interferer $i$ [dBW]
+    \item $L_{\mathrm{fs}}(f,d_{\mathrm{km}})$: free-space path loss per ITU-R P.525 [dB]
+    \item $d_{\mathrm{km}}$: interferer-to-victim distance [km]
+    \item $G_{\mathrm{rx}}$: receive antenna gain in the direction of the interferer [dB]
+    \item $B_{\mathrm{MHz}}$: reference bandwidth [MHz]
+\end{itemize}
+\end{itemize}
+
+This formulation expresses EPFD using a link-budget approach consistent with the
+rest of the model; geometric spreading is fully captured by the free-space path
+loss term $L_{\mathrm{fs}}$ defined in ITU-R P.525.
+
+
+
+
+\end{document}
