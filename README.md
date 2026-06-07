@@ -1,5 +1,7 @@
 # Analysis and Modeling of Radio-Frequency Interference for Space Communication Links
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://rfi-space-link-simulator.streamlit.app/)
+
 A Python simulation framework for quantifying Radio Frequency Interference (RFI) on satellite communication links, built on ITU-R recommendation models.
 
 > **Research Project** — Hamburg University of Technology (TUHH), WinSem 2025-26  
