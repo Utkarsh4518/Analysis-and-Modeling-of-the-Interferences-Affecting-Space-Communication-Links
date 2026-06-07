@@ -98,7 +98,6 @@ The workflow flows: **`Project_Equations.tex`** → **`rfi/equations_itu.py`** �
 ```
 rfi-model/
 ├── Project_Equations.tex            # LaTeX source of all model equations
-├── UtkarshMaurya_ProjectReport.pdf  # Full project report (IEEE format)
 ├── rfi/
 │   ├── __init__.py                  # Package exports
 │   ├── equations_itu.py             # ITU-R equation implementations
@@ -182,7 +181,7 @@ All equations are formally documented in [`Project_Equations.tex`](Project_Equat
 6. SNR loss due to RFI
 7. Equivalent Power Flux Density (EPFD)
 
-The full project report is available as [`UtkarshMaurya_ProjectReport.pdf`](UtkarshMaurya_ProjectReport.pdf).
+
 
 ---
 
