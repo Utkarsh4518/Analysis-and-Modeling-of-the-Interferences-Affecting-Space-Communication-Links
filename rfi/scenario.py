@@ -200,6 +200,7 @@ def run_multi_entry_rfi_scenario(
         "P(SNR Loss > 3 dB) (%)": compute_time_fraction_exceeded(
             snr_loss_samples_db, 3.0
         ),
+        "SNR Loss Samples": snr_loss_samples_db,
         "Pointing Margin (deg)": pointing_margin_deg,
         "HPBW 3dB (deg)": theta_3db,
         "Effective Theta (deg)": theta_used if 'theta_used' in locals() else np.nan,
