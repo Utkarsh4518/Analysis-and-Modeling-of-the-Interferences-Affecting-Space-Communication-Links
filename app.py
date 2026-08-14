@@ -253,7 +253,33 @@ with st.sidebar:
     )
 
     st.markdown("---")
-    enable_edu = st.checkbox("🎓 Enable Educational Explanations", value=False, help="Show physics explanations beneath each graph.")
+    enable_edu = st.checkbox("🎓 Enable Educational Explanations", value=True, help="Show a plain-language physics explanation beneath each graph.")
+
+    st.markdown("---")
+    st.caption("🛰️ Fixed Victim-Link Parameters")
+    st.markdown(
+        f'''
+        <div class="sidebar-info">
+            <div class="sidebar-info-row">
+                <span class="sidebar-info-label">Tx EIRP</span>
+                <span class="sidebar-info-value">{COMMON_SYSTEM['EIRP_dbw']:.0f} dBW</span>
+            </div>
+            <div class="sidebar-info-row">
+                <span class="sidebar-info-label">Rx Dish Diameter</span>
+                <span class="sidebar-info-value">{COMMON_SYSTEM['D_m']} m</span>
+            </div>
+            <div class="sidebar-info-row">
+                <span class="sidebar-info-label">System Temp (T_sys)</span>
+                <span class="sidebar-info-value">{COMMON_SYSTEM['T_sys_k']:.0f} K</span>
+            </div>
+            <div class="sidebar-info-row">
+                <span class="sidebar-info-label">Bandwidth</span>
+                <span class="sidebar-info-value">{COMMON_SYSTEM.get('BW_Hz', DEFAULT_BW_HZ) / 1e6:.0f} MHz</span>
+            </div>
+        </div>
+        ''',
+        unsafe_allow_html=True
+    )
 
     st.markdown("---")
     st.caption("📋 Selected Scenario Parameters")
@@ -343,6 +369,35 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+with st.expander("ℹ️ About this simulator — read me first", expanded=True):
+    st.markdown(
+        """
+Satellite links share the spectrum with other transmitters — other satellites, terrestrial
+microwave links, even other beams of the same constellation. When one of those signals leaks
+into a receiver's passband, it's **Radio-Frequency Interference (RFI)**: it raises the effective
+noise floor and eats into the link's Signal-to-Noise Ratio (SNR), even though the wanted signal
+itself hasn't changed.
+
+**What this tool does:** it models one "victim" downlink (a fixed ground-station dish receiving
+from a satellite) and one interfering transmitter, using ITU-R propagation and antenna models
+(**P.525** free-space path loss, **S.1528** off-axis antenna gain). You choose the victim's
+frequency, link distance, and how strong the interferer is — the app computes how much SNR the
+victim link loses as a result.
+
+**How to use it:**
+1. In the sidebar, set the **frequency** and **link distance** (or pick a mission preset — GEO, Moon, Mars).
+2. Pick an **interference scenario** (Weak / Moderate / Strong).
+3. Explore the same result from five angles in the tabs below — a frequency sweep, a
+   distance × frequency heatmap, the antenna's directional pattern, a Monte Carlo statistical
+   spread, and the link geometry.
+
+The victim system itself (dish size, transmit power, receiver noise temperature) is fixed — see
+**Fixed Victim-Link Parameters** in the sidebar — so that every scenario is directly comparable.
+Full derivations, assumptions, and research findings are in the
+[project README](https://github.com/Utkarsh4518/Analysis-and-Modeling-of-the-Interferences-Affecting-Space-Communication-Links#readme).
+        """
+    )
+
 # ---------------------------------------------------------------------------
 # KPI Cards
 # ---------------------------------------------------------------------------
@@ -362,6 +417,19 @@ for label, value, css_class in kpi_data:
     kpi_html += '</div>\n'
 kpi_html += '</div>'
 st.markdown(kpi_html, unsafe_allow_html=True)
+
+with st.expander("❓ What do these metrics mean?"):
+    st.markdown(
+        """
+| Metric | Meaning |
+|---|---|
+| **Baseline SNR** | Signal-to-Noise Ratio of the victim link with *no* interference present — noise-only degradation. |
+| **Degraded SNR** | SNR once the interferer's power is added on top of the thermal noise. |
+| **SNR Loss** | `Baseline SNR − Degraded SNR` — how much margin the link gives up to interference. Values under ~1 dB are usually negligible; several dB can threaten the link budget. |
+| **C / I** | Carrier-to-Interference ratio — the wanted signal's power relative to the interferer's power alone (ignores thermal noise). |
+| **EPFD** | Equivalent Power Flux Density (dBW/m²/MHz) — the interference power density arriving at the receiver, normalized to a 1 MHz bandwidth. Used by ITU-R to set regulatory interference limits. |
+        """
+    )
 
 # ---------------------------------------------------------------------------
 # Caching Functions
@@ -418,6 +486,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 # Tab 1 — SNR Loss vs Frequency
 # ---------------------------------------------------------------------------
 with tab1:
+    st.caption("How much SNR the victim link loses to interference at every frequency between 2–40 GHz, at the currently selected distance and scenario. The red dot marks your current frequency slider position.")
     freq_sweep, sweep_data = run_frequency_sweep_cached(d_km, scenario_name)
 
     fig = go.Figure()
@@ -466,6 +535,7 @@ with tab1:
 # Tab 2 — Distance vs Frequency Heatmap
 # ---------------------------------------------------------------------------
 with tab2:
+    st.caption("SNR loss across a grid of frequency and distance, so you can see at a glance where the victim link is most vulnerable. Darker regions (per the colorbar) mean more SNR loss.")
     freq_grid, dist_grid, Z = run_heatmap_cached(d_km, scenario_name)
 
     fig_hm = go.Figure(
@@ -506,8 +576,9 @@ with tab2:
 # Tab 3 — Antenna Directivity Explorer
 # ---------------------------------------------------------------------------
 with tab3:
+    st.caption("The receiver antenna's gain as a function of off-axis angle (ITU-R S.1528). A narrower beam (higher frequency / larger dish) rejects off-axis interference more strongly — independent of the sidebar scenario.")
     col_left, col_right = st.columns([1, 2.5])
-    
+
     with col_left:
         st.markdown("<h3 style='margin-bottom: 24px;'>🎛️ Parameters</h3>", unsafe_allow_html=True)
         ant_f_ghz = st.slider(
@@ -620,8 +691,9 @@ with tab3:
 # Tab 4 — Monte Carlo Analysis
 # ---------------------------------------------------------------------------
 with tab4:
+    st.caption("Interference isn't constant — it fluctuates with weather, pointing errors, and transmitter behavior. This runs 5,000 log-normal samples around the aggregate interference level to show the real spread of SNR loss, not just its average.")
     col_left, col_right = st.columns([1, 2.5])
-    
+
     with col_left:
         st.markdown("<h3 style='margin-bottom: 24px;'>📊 Statistical Metrics</h3>", unsafe_allow_html=True)
         samples = result.get("SNR Loss Samples", np.array([]))
@@ -704,14 +776,15 @@ with tab4:
 # Tab 5 — Geometry Visualization
 # ---------------------------------------------------------------------------
 with tab5:
+    st.caption("A 2D top-down sketch of the ground station, the target satellite, and the interferer, drawn to the selected distance and off-axis angle — a sanity check on the geometry behind the numbers above.")
     col_left, col_right = st.columns([1, 2])
-    
+
     with col_left:
         st.markdown("<h3 style='margin-bottom: 24px;'>📐 Spatial Configuration</h3>", unsafe_allow_html=True)
         if interferer_list:
             interferer = interferer_list[0]
-            d_int = interferer.get("distance_km", 36000.0)
-            theta_deg = interferer.get("off_axis_angle_deg", 0.0)
+            d_int = interferer.get("d_km", 36000.0)
+            theta_deg = interferer.get("theta_off_axis_deg", 0.0)
         else:
             d_int = d_km
             theta_deg = 0.0
@@ -841,3 +914,19 @@ with st.expander("📖 Physical Principles & ITU-R Modeling Reference"):
         Consequently, the receiver provides **greater spatial discrimination** against off-axis interferers, resulting in **significantly lower SNR loss** at higher frequencies (such as Ka-band) compared to lower frequencies (such as S-band).
         """
     )
+
+# ---------------------------------------------------------------------------
+# Footer
+# ---------------------------------------------------------------------------
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown(
+    """
+    <div style="text-align:center; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.08); color:#9ca3af; font-size:13px;">
+        Analysis and Modeling of RFI for Space Communication Links · Research Project, Hamburg University of Technology (TUHH), WinSem 2025-26<br>
+        <strong>Utkarsh Maurya</strong> ·
+        <a href="mailto:utkarsh.maurya@tuhh.de" style="color:#a5b4fc;">utkarsh.maurya@tuhh.de</a> ·
+        <a href="https://github.com/Utkarsh4518/Analysis-and-Modeling-of-the-Interferences-Affecting-Space-Communication-Links" style="color:#a5b4fc;" target="_blank">GitHub Repository</a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
